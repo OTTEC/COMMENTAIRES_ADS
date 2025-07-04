@@ -1,0 +1,30 @@
+name: Notify on File Change
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get changed files
+        id: files
+        run: |
+          echo "CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | xargs)" >> $GITHUB_ENV
+
+      - name: Send Email
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.office365.com
+          server_port: 587
+          username: ${{ secrets.SMTP_USERNAME }}
+          password: ${{ secrets.SMTP_PASSWORD }}
+          subject: 'File(s) changed in OTTEC/COMMENTAIRES_ADS'
+          to: OTTEC@paysdebray.org
+          from: GitHub Actions <OTTEC@paysdebray.org>
+          body: |
+            The following files have been added or modified in the OTTEC/COMMENTAIRES_ADS repository:
+            ${{ env.CHANGED_FILES }}
+            See commit: https://github.com/${{ github.repository }}/commit/${{ github.sha }}
