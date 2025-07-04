@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Commentaire Urbanisme</title>
+</head>
+<body>
+  <h1>Ajouter un commentaire à une parcelle</h1>
+  
+  <label>Référence de la parcelle (ex: AB 123) :</label><br>
+  <input type="text" id="parcelleRef" /><br><br>
+
+  <label>Votre commentaire :</label><br>
+  <textarea id="commentaire" rows="6" cols="60"></textarea><br><br>
+
+  <button onclick="envoyerCommentaire()">Envoyer</button>
+
+  <script>
+    async function envoyerCommentaire() {
+      const parcelle = document.getElementById("parcelleRef").value.trim().replace(/\s+/g, "_");
+      const commentaire = document.getElementById("commentaire").value.trim();
+
+      if (!parcelle || !commentaire) {
+        alert("Merci de remplir tous les champs.");
+        return;
+      }
+
+      const contenu = `## Commentaire sur ${parcelle}\n\n${commentaire}\n\n_Date : ${new Date().toLocaleString()}_\n`;
+      const base64Content = btoa(unescape(encodeURIComponent(contenu)));
+
+      const token = "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";
+      const utilisateur = "OTTEC";
+      const depot = "commentaires-ads";
+
+      const url = `https://api.github.com/repos/${utilisateur}/${depot}/contents/${parcelle}.md`;
+
+      const response = await fetch(url, {
+        method: "PUT",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          message: `Ajout commentaire pour ${parcelle}`,
+          content: base64Content
+        })
+      });
+
+      if (response.ok) {
+        alert("✅ Commentaire enregistré sur GitHub !");
+        document.getElementById("parcelleRef").value = "";
+        document.getElementById("commentaire").value = "";
+      } else {
+        const data = await response.json();
+        console.error(data);
+        alert("❌ Erreur : " + data.message);
+      }
+    }
+  </script>
+</body>
+</html>
